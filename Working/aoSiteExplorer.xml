@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Collection name="Site Explorer" guid="{5426E6D5-05A8-4A87-B535-CD0FABA04F29}" Version="1">
+  <Interfaces>
+    <Page name="Site Explorer" guid="{74E221AC-D198-4505-ABB2-832258D399DC}" type="tool">
+      <Description>This add-on creates the Site Explorer tool used both as a separate tool, and as a source for site links for any field set to Link Type.</Description>
+      <Help />
+      <HelpLink />
+      <Argument/>
+      <ActiveXDLL>aoSiteExplorer.dll</ActiveXDLL>
+      <ActiveXProgramID>aoSiteExplorer.ContentClass</ActiveXProgramID>
+      <IconLink />
+      <Template>1</Template>
+      <Content>1</Content>
+      <Admin>1</Admin>
+      <RemoteMethod/>
+      <OnPageEnd />
+      <JavaScriptOnLoad />
+      <JavaScriptInHead></JavaScriptInHead>
+      <JavaScriptBodyEnd />
+      <PageTitle>Site Explorer</PageTitle>
+      <MetaDescription />
+      <MetaKeywordList />
+      <OtherHeadTags />
+      <Copy />
+      <CopyText />
+      <IncludeAddon name="NavBase" guid="{5DEDEC60-81CD-4E46-B55C-D10C2BB4C4C7}"/>
+      <StyleSheet><![CDATA[
+
+.SiteExplorerCon {}
+.SiteExplorerCon .NavCon {padding:10px;}
+.SiteExplorerCon .NavCon .NodeCon {white-space:nowrap;}
+.SiteExplorerCon .NavCon .NodeCon A {white-space:nowrap;}
+.SiteExplorerCon .NavCon .NodeEmptyCon {white-space:nowrap;}
+.SiteExplorerCon .NavCon .NodeChildCon {white-space:nowrap;margin-left:20px;}
+
+            ]]></StyleSheet>
+      <Navigator NameSpace="Manage Content" type="Tool" />
+    </Page>
+    <Page name="Site Explorer Remote Method" guid="{A48244D5-7399-468C-82F5-05CA6B95CD40}">
+      <Description>This add-on provides the remote methods necessary for the Site Explorer Ajax menuing.</Description>
+      <Help />
+      <HelpLink />
+      <Argument></Argument>
+      <ActiveXDLL>aoSiteExplorer.dll</ActiveXDLL>
+      <ActiveXProgramID>aoSiteExplorer.RemoteMethodClass</ActiveXProgramID>
+      <IconLink />
+      <Template/>
+      <Content/>
+      <Admin />
+      <RemoteMethod>1</RemoteMethod>
+      <OnPageEndEvent/>
+      <JavaScriptOnLoad />
+      <JavaScriptInHead></JavaScriptInHead>
+      <JavaScriptBodyEnd />
+      <PageTitle />
+      <MetaDescription />
+      <MetaKeywordList />
+      <OtherHeadTags />
+      <Copy />
+      <CopyText />
+      <StyleSheet/>
+    </Page>
+  </Interfaces>
+  <importcollection name="Navigator Base" guid="{35781FB2-57B5-44C2-8F3B-D0DDA010AFA8}"/>
+</Collection>
