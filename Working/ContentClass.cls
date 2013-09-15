@@ -17,7 +17,7 @@ Option Explicit
 ' ----- Global Objects
 '
 'Private Main As MainClass
-Private Main As Object
+Private main As Object
 Private Csv As Object
 Private ColumnCnt As Long
 '
@@ -78,8 +78,8 @@ Private Type PageType
 End Type
 Private Pages() As PageType
 Private PageCnt As Long
-Private PageIndex As FastIndex4.FastIndexClass
-Private PagePathIndex As New FastIndex4.FastIndexClass
+'Private PageIndex As localFastIndexClass
+Private PagePathIndex As New localFastIndexClass
 '
 ' Exit Modes - how this add-on displays it's exit button
 '
@@ -108,7 +108,7 @@ End Function
 '=================================================================================
 '
 Public Sub Init(MainObject As Object)
-    Set Main = MainObject
+    Set main = MainObject
     End Sub
 '
 '=================================================================================
@@ -124,20 +124,20 @@ Public Function GetContent(OptionString As String) As String
     '
     ' Determine exit mode
     '
-    ExitMode = Main.GetStreamInteger("exitmode")
+    ExitMode = main.GetStreamInteger("exitmode")
     If ExitMode = 0 Then
-        If InStr(1, Main.ServerLink, Main.SiteProperty_AdminURL, vbTextCompare) <> 0 Then
+        If InStr(1, main.ServerLink, main.SiteProperty_AdminURL, vbTextCompare) <> 0 Then
             ExitMode = CancelReturnNothing
         End If
     End If
-    RootPageName = Main.GetAddonOption("RootPageName", OptionString)
-    LinkObjectName = Main.GetStreamText("LinkObjectName")
-    BuildVersion = Main.SiteProperty_BuildVersion
+    RootPageName = main.GetAddonOption("RootPageName", OptionString)
+    LinkObjectName = main.GetStreamText("LinkObjectName")
+    BuildVersion = main.SiteProperty_BuildVersion
     '
     GetContent = GetForm(RootPageName, AllowGroupAdd, BuildVersion)
     '
     If BuildVersion < "3.4.042" Then
-        GetContent = GetContent & Main.GetAddonContent("", "NavBase", "", ContextRemoteMethod, "", 0, "", 0)
+        GetContent = GetContent & main.GetAddonContent("", "NavBase", "", 5, "", 0, "", 0)
     End If
     '
     Exit Function
@@ -194,7 +194,7 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
     Dim RootPageID As Long
     Dim PageID As Long
     Dim FormFolders As String
-    Dim FormDetails As New FastStringClass
+    Dim FormDetails As New localFastStringClass
     Dim RowCount As Long
     Dim IconLink As String
     Dim IconOnClick  As String
@@ -213,12 +213,14 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
     Dim Ptr As Long
     Dim ButtonExit
     Dim PCCLocal As Variant
-    Dim PCCParentIDIndex As FastIndex4.FastIndexClass
+    Dim PCCParentIDIndex As Object
+    'Dim PCCParentIDIndex As localFastIndexClass
     Dim SSCLocal As Variant
     Dim SSCCnt As Long
     Dim SSCPtr As Long
     '
-    Set AdminUI = CreateObject("ccWeb3.AdminUIClass")
+    
+    Set AdminUI = getAdminUI(main)
     '
     Const Image5 = "<img src=/cclib/images/spacer.gif width=5 height=1>"
     Const Image10 = "<img src=/cclib/images/spacer.gif width=10 height=1>"
@@ -247,21 +249,21 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
         & " border-top: 1px solid #a0a0a0;" _
         & " border-left: 1px solid #a0a0a0;"
     '
-    If Not (Main Is Nothing) Then
+    If Not (main Is Nothing) Then
         '
         ' Determine Current Folder
         '
-        PCCLocal = Main.GetPCC(False, False)
-        AllowFileAuthoring = Main.IsContentManager("Page Content")
-        Button = Main.GetStreamText("Button")
-        PageID = Main.GetStreamInteger("PageID")
+        PCCLocal = main.GetPCC(False, False)
+        AllowFileAuthoring = main.IsContentManager("Page Content")
+        Button = main.GetStreamText("Button")
+        PageID = main.GetStreamInteger("PageID")
         If PageID <> 0 Then
             '
             ' Open node as well as display details
             '
-            OpenNodeList = Main.GetVisitProperty("SiteExplorerOpenNodeList")
+            OpenNodeList = main.GetVisitProperty("SiteExplorerOpenNodeList")
             OpenNodeList = OpenNodeList & "," & CStr(PageID)
-            Call Main.SetVisitProperty("SiteExplorerOpenNodeList", OpenNodeList)
+            Call main.SetVisitProperty("SiteExplorerOpenNodeList", OpenNodeList)
         End If
         '
         ' ----- Setup Local File Management
@@ -269,7 +271,7 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
         '       Always allow, everyone has access to the root folder, then if you can get to the folder, let em upload
         '
         'Call Main.AddRefreshQueryString("PageID", PageID)
-        RQS = Main.RefreshQueryString
+        RQS = main.RefreshQueryString
         AllowLocalFileAdd = True
         '
         ' ----- Process input
@@ -278,29 +280,29 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
             '
             ' no button, setup defaults
             '
-            AllowOrphanRootPages = Main.GetVisitProperty("AllowOrphanRootPages", "0")
+            AllowOrphanRootPages = main.GetVisitProperty("AllowOrphanRootPages", "0")
         Else
             Select Case Button
                 Case ButtonApply
                     '
                     ' Apply Button ( for < 3.4.020 )
                     '
-                    AllowOrphanRootPages = Main.GetStreamBoolean("AllowOrphanRootPages")
-                    Call Main.SetVisitProperty("AllowOrphanRootPages", AllowOrphanRootPages)
+                    AllowOrphanRootPages = main.GetStreamBoolean("AllowOrphanRootPages")
+                    Call main.SetVisitProperty("AllowOrphanRootPages", AllowOrphanRootPages)
                 Case ButtonDelete
                     '
                     ' Delete Button
                     '
-                    CS = Main.OpenCSContentRecord("page content", PageID)
-                    If Main.IsCSOK(CS) Then
-                        PageParentID = Main.GetCSInteger(CS, "ParentID")
+                    CS = main.OpenCSContentRecord("page content", PageID)
+                    If main.IsCSOK(CS) Then
+                        PageParentID = main.GetCSInteger(CS, "ParentID")
                     End If
-                    Call Main.CloseCS(CS)
-                    Call Main.DeleteChildRecords("ccpagecontent", PageID, False)
-                    Call Main.DeleteContentRecord("page content", PageID)
+                    Call main.CloseCS(CS)
+                    Call main.DeleteChildRecords("ccpagecontent", PageID, False)
+                    Call main.DeleteContentRecord("page content", PageID)
                     PageID = PageParentID
                     If PageID = 0 Then
-                        PageID = Main.GetLandingPageID()
+                        PageID = main.GetLandingPageID()
                     End If
                 Case ButtonCancel
                     '
@@ -310,8 +312,8 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
                         GetForm = ""
                         Exit Function
                     ElseIf ExitMode = CancelRedirectToPage Then
-                        Link = Main.ServerPage
-                        Call Main.Redirect(Link)
+                        Link = main.ServerPage
+                        Call main.Redirect(Link)
                         Exit Function
                     End If
             End Select
@@ -321,22 +323,22 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
         '
         If (ExitMode = CancelRedirectToPage) Or (ExitMode = CancelReturnNothing) Then
             ButtonList = ButtonList & "," & ButtonCancel
-            ButtonExit = Main.GetFormButton(ButtonCancel)
+            ButtonExit = main.GetFormButton(ButtonCancel)
         ElseIf (ExitMode = CloseWindow) Then
             ButtonList = ButtonList & "," & ButtonClose
-            ButtonExit = Main.GetFormButton(ButtonClose, , , "window.close();")
+            ButtonExit = main.GetFormButton(ButtonClose, , , "window.close();")
         End If
         ButtonList = ButtonList & "," & ButtonDelete
         ButtonList = ButtonList & "," & ButtonApply
         ButtonBar = "<div class=ccAdminButtonBar>" _
-            & ButtonExit & AdminUI.GetButtonsFromList(Main, ButtonList, True, True, "Button") _
+            & ButtonExit & AdminUI.GetButtonsFromList(main, ButtonList, True, True, "Button") _
             & "</div>"
         JumpSelect = GetJumpSelect(PageID, RootPageName, PCCLocal)
         If JumpSelect = "" Then
             GetForm = GetForm _
                 & "<TABLE class=ccAdminListCaption border=""0"" cellpadding=""5"" cellspacing=""5"" width=""100%"">" _
                 & "<TR>" _
-                & "<TD width=50% align=left>" & GetParentPagesLink(PCCLocal, RootPageName, RootPageID, PageID, PageID, Main.RefreshQueryString, "") & "</TD>" _
+                & "<TD width=50% align=left>" & GetParentPagesLink(PCCLocal, RootPageName, RootPageID, PageID, PageID, main.RefreshQueryString, "") & "</TD>" _
                 & "<TD width=50% align=right>&nbsp;</TD>" _
                 & "</TR>" _
                 & "</TABLE>" _
@@ -345,7 +347,7 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
         Else
             GetForm = GetForm _
                 & "<TABLE class=ccAdminListCaption border=""0"" cellpadding=""5"" cellspacing=""5"" width=""100%"">" _
-                & "<TR><TD align=left>" & GetParentPagesLink(PCCLocal, RootPageName, RootPageID, PageID, PageID, Main.RefreshQueryString, "") & "</TD></TR>" _
+                & "<TR><TD align=left>" & GetParentPagesLink(PCCLocal, RootPageName, RootPageID, PageID, PageID, main.RefreshQueryString, "") & "</TD></TR>" _
                 & "<TR><TD align=left style=""white-space:nowrap;"">" & "Jump&nbsp;to&nbsp;" & JumpSelect & "</TD></TR>" _
                 & "</TABLE>" _
                 & "" _
@@ -375,12 +377,12 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
             PageType = "Landing Page"
             ChildPageCaption = "Root Pages"
             If BuildVersion < "3.3.950" Then
-                PageID = Main.GetSiteProperty("LandingPageID", "", True)
+                PageID = main.GetSiteProperty("LandingPageID", "", True)
             Else
-                PageID = Main.GetLandingPageID
+                PageID = main.GetLandingPageID
             End If
             If PageID > 0 Then
-                Ptr = Main.GetPCCPtr(PageID, False, False)
+                Ptr = main.GetPCCPtr(PageID, False, False)
             End If
             If Ptr >= 0 Then
                 PageName = kmaEncodeHTML(kmaEncodeText(PCCLocal(PCC_Name, Ptr)))
@@ -389,9 +391,9 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
                 EditLink = GetRecordEditLink("Page Content", PageID, False, PageName, True, BuildVersion)
             End If
         Else
-            SSCLocal = Main.GetSSC()
+            SSCLocal = main.GetSSC()
             SSCCnt = UBound(SSCLocal, 2) + 1
-            Ptr = Main.GetPCCPtr(PageID, False, False)
+            Ptr = main.GetPCCPtr(PageID, False, False)
             If Ptr < 0 Then
                 '
                 ' Page Not Found
@@ -420,13 +422,13 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
                     '
                     ' Child Page
                     '
-                    PCCParentPtr = Main.GetPCCPtr(ParentID, False, False)
+                    PCCParentPtr = main.GetPCCPtr(ParentID, False, False)
                     If PCCParentPtr < 0 Then
                         QS = RQS
                         QS = ModifyQueryString(QS, "pageid", kmaEncodeText(PageID), True)
                         PageType = "Child Page, but parent page is inactive or has been deleted"
                         ErrorMessage = ErrorMessage & vbCrLf & "The parent set for this page is missing. This page may not display on the site."
-                        ErrorMessage = ErrorMessage & "<div class=""ErrorMsg""><a href=""" & Main.SiteProperty_AdminURL & "?" & QS & "&a904o2pa0cut=" & ContentControlID & "." & PageID & """>Fix</a> by cutting this page, then pasting it under a valid page.</div>"
+                        ErrorMessage = ErrorMessage & "<div class=""ErrorMsg""><a href=""" & main.SiteProperty_AdminURL & "?" & QS & "&a904o2pa0cut=" & ContentControlID & "." & PageID & """>Fix</a> by cutting this page, then pasting it under a valid page.</div>"
                     Else
                         PageType = "Child Page"
                     End If
@@ -455,8 +457,8 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
                             QS = RQS
                             QS = ModifyQueryString(QS, "pageid", kmaEncodeText(PageID), True)
                             ErrorMessage = ErrorMessage & vbCrLf & "This page has no parent, but it is not associated directly to a section. It can not be displayed on a site using editable templates."
-                            ErrorMessage = ErrorMessage & "<div style=""margin-left:10px""><a href=""" & Main.SiteProperty_AdminURL & "?af=4&id=0&cid=" & Main.GetContentID("Site Sections") & "&wc=RootPageID%3d" & PageID & ",name%3d" & PageName & ",caption%3d" & PageName & """>Fix</a> by creating a new section for this page.</div>"
-                            ErrorMessage = ErrorMessage & "<div style=""margin-left:10px""><a href=""" & Main.SiteProperty_AdminURL & "?" & QS & "&a904o2pa0cut=" & kmaEncodeText(PCCLocal(PCC_ContentControlID, PCCPtr)) & "." & PageID & """>Fix</a> by cutting this page, then pasting it under a valid page.</div>"
+                            ErrorMessage = ErrorMessage & "<div style=""margin-left:10px""><a href=""" & main.SiteProperty_AdminURL & "?af=4&id=0&cid=" & main.GetContentID("Site Sections") & "&wc=RootPageID%3d" & PageID & ",name%3d" & PageName & ",caption%3d" & PageName & """>Fix</a> by creating a new section for this page.</div>"
+                            ErrorMessage = ErrorMessage & "<div style=""margin-left:10px""><a href=""" & main.SiteProperty_AdminURL & "?" & QS & "&a904o2pa0cut=" & kmaEncodeText(PCCLocal(PCC_ContentControlID, PCCPtr)) & "." & PageID & """>Fix</a> by cutting this page, then pasting it under a valid page.</div>"
                         Else
                             PageType = "Root Page"
                         End If
@@ -492,34 +494,34 @@ Private Function GetForm(RootPageName As String, AllowGroupAdd As Boolean, Build
         '
 Dim UsedMsgList As String
 
-        If Main.IsSQLTableField("default", "ccSpiderDocs", "PageID") Then
+        If main.IsSQLTableField("default", "ccSpiderDocs", "PageID") Then
             SQL = "select e.* from ccSpiderErrors e left join ccSpiderDocs d on d.id=e.docid where d.pageid=" & PageID
-            CS = Main.OpenCSSQL("default", SQL)
-            If Main.IsCSOK(CS) Then
+            CS = main.OpenCSSQL("default", SQL)
+            If main.IsCSOK(CS) Then
                 FormDetails.Add vbCrLf & "<TR><TD class=""Header"" colspan=2 style=""color:red;""><B>Issues found by Content Spider</B></TD></TR>"
-                Do While Main.IsCSOK(CS)
-                    If Main.GetCSBoolean(CS, "Iswarning") Then
+                Do While main.IsCSOK(CS)
+                    If main.GetCSBoolean(CS, "Iswarning") Then
                         Copy = "Warning:"
                     Else
                         Copy = "Error:"
                     End If
-                    LineNumber = Main.GetCSInteger(CS, "linenumber")
-                    LinePosition = Main.GetCSInteger(CS, "LinePosition")
+                    LineNumber = main.GetCSInteger(CS, "linenumber")
+                    LinePosition = main.GetCSInteger(CS, "LinePosition")
                     If LineNumber <> 0 Then
                         Copy = Copy & " line number " & LineNumber
                         If LinePosition <> 0 Then
                             Copy = Copy & " line position " & LinePosition
                         End If
                     End If
-                    Copy = Copy & " " & Main.GetCSText(CS, "name")
+                    Copy = Copy & " " & main.GetCSText(CS, "name")
                     If InStr(1, "," & UsedMsgList & ",", "," & Copy & ",", vbTextCompare) = 0 Then
                         UsedMsgList = UsedMsgList & "," & Copy
                         FormDetails.Add vbCrLf & "<TR><TD class=""ErrorCell"" colspan=2>" & Copy & "</TD></TR>"
                     End If
-                    Call Main.NextCSRecord(CS)
+                    Call main.NextCSRecord(CS)
                 Loop
             End If
-            Call Main.CloseCS(CS)
+            Call main.CloseCS(CS)
         End If
         '
         ' Edit Links
@@ -529,13 +531,13 @@ Dim UsedMsgList As String
         FormDetails.Add vbCrLf & "<TR><TD class=""EditCell"" colspan=2>" & EditLink & "<div style=""margin-left:40px;"">edit this page [" & PageName & "]</div></TD></TR>"
         Do While ParentID <> 0 And LoopPtr < 20
             recordId = ParentID
-            Ptr = Main.GetPCCPtr(recordId, False, False)
+            Ptr = main.GetPCCPtr(recordId, False, False)
             If Ptr >= 0 Then
                 ParentID = kmaEncodeInteger(PCCLocal(PCC_ParentID, Ptr))
             Else
                 ParentID = 0
             End If
-            RecordName = Main.GetRecordName("Page Content", recordId)
+            RecordName = main.GetRecordName("Page Content", recordId)
             IsRootPage = (ParentID = 0)
             If IsRootPage Then
                 EditLink = GetRecordEditLink("Page Content", recordId, False, RecordName, True, BuildVersion)
@@ -550,12 +552,12 @@ Dim UsedMsgList As String
         '
         ' Section Edit Link
         '
-        CS = Main.OpenCSContent("Site Sections", "RootPageID=" & recordId)
-        If Main.IsCSOK(CS) Then
-            SectionID = Main.GetCSInteger(CS, "ID")
-            SectionName = Main.GetCSText(CS, "name")
+        CS = main.OpenCSContent("Site Sections", "RootPageID=" & recordId)
+        If main.IsCSOK(CS) Then
+            SectionID = main.GetCSInteger(CS, "ID")
+            SectionName = main.GetCSText(CS, "name")
         End If
-        Call Main.CloseCS(CS)
+        Call main.CloseCS(CS)
         If SectionID <> 0 Then
             EditLink = GetRecordEditLink("Site Sections", SectionID, False, SectionName, True, BuildVersion)
             FormDetails.Add vbCrLf & "<TR><TD class=""EditCell"" colspan=2>" & EditLink & "<div style=""margin-left:40px;"">edit section [" & SectionName & "]</div></TD></TR>"
@@ -595,11 +597,11 @@ Dim UsedMsgList As String
             ' Lookup the files in the folder
             '
             If (PageType = "Landing Page") Then
-                PCCPtr = Main.GetPCCFirstChildPtr(0, False, False)
+                PCCPtr = main.GetPCCFirstChildPtr(0, False, False)
             Else
-                PCCPtr = Main.GetPCCFirstChildPtr(PageID, False, False)
+                PCCPtr = main.GetPCCFirstChildPtr(PageID, False, False)
             End If
-            Set PCCParentIDIndex = Main.PCCParentIDIndex
+            Set PCCParentIDIndex = main.PCCParentIDIndex
             PtrCnt = 0
             Do While PCCPtr >= 0
                 ReDim Preserve PCCPtrs(PtrCnt)
@@ -608,7 +610,7 @@ Dim UsedMsgList As String
                 PCCPtr = PCCParentIDIndex.GetNextPointerMatch(CStr(PageID))
             Loop
             If PtrCnt > 0 Then
-                PCCPtrsSorted = Main.GetPCCPtrsSorted(PCCPtrs, "name")
+                PCCPtrsSorted = main.GetPCCPtrsSorted(PCCPtrs, "name")
             End If
             '
             ' List out the FILES
@@ -653,7 +655,7 @@ Dim UsedMsgList As String
         ' Create the FormFolders
         '
         Dim Nav As New RemoteMethodClass
-        Call Nav.Init(Main)
+        Call Nav.Init(main)
         OptionString = "ShowBrokenNodes=" & AllowOrphanRootPages
         FormFolders = Nav.GetContent(OptionString)
         FormFolders = "<div class=""NavCon"">" & FormFolders & "</div>"
@@ -670,27 +672,27 @@ Dim UsedMsgList As String
             & "</Table>" _
             & "<div class=""ccControlsCon"">" _
             & "<TABLE border=0 cellpadding=0 cellspacing=0 width=""100%""><TR>" _
-            & "<TD class=""left"">" & Main.GetFormInputCheckBox("AllowOrphanRootPages", AllowOrphanRootPages) & "</TD>" _
+            & "<TD class=""left"">" & main.GetFormInputCheckBox("AllowOrphanRootPages", AllowOrphanRootPages) & "</TD>" _
             & "<TD class=""right"">Show Orphan Root Pages (pages with no parent page and no associated section)</TD>" _
             & "</TR></Table>" _
             & "</div>" _
             & "" _
-            & Main.GetFormInputHidden("PageID", PageID) _
-            & Main.GetFormInputHidden(RequestNameRefreshBlock, Main.GetFormSN) _
-            & Main.GetFormInputHidden("RowCount", RowCount) _
+            & main.GetFormInputHidden("PageID", PageID) _
+            & main.GetFormInputHidden(RequestNameRefreshBlock, main.GetFormSN) _
+            & main.GetFormInputHidden("RowCount", RowCount) _
             & ""
-        Call Main.GetAddonContent(0, "NavBase", "RootPageID=-1", ContextPage, "", 0, "", 0)
+        Call main.GetAddonContent(0, "NavBase", "RootPageID=-1", 1, "", 0, "", 0)
         '
         Caption = SpanClassAdminNormal & "<strong>Site Explorer</strong></SPAN>"
         Description = ""
-        GetForm = AdminUI.GetBody(Main, Caption, ButtonList, "", False, True, Description, "", 0, GetForm)
-        Call Main.AddPageTitle("Site Explorer")
+        GetForm = AdminUI.GetBody(main, Caption, ButtonList, "", False, True, Description, "", 0, GetForm)
+        Call main.AddPageTitle("Site Explorer")
     End If
     '
     '
     ' Help Link
     '
-    GetForm = Main.GetHelpLink(42, "Using the Resource Library", "The Resource Library is a convenient place to store reusable content, such as images and downloads. Objects in the Library can be placed on any page. The Library itself can be added to any page on your site.") & GetForm
+    GetForm = main.GetHelpLink(42, "Using the Resource Library", "The Resource Library is a convenient place to store reusable content, such as images and downloads. Objects in the Library can be placed on any page. The Library itself can be added to any page on your site.") & GetForm
     GetForm = "<div class=""SiteExplorerCon"">" & GetForm & "</div>"
     Exit Function
 ErrorTrap:
@@ -741,7 +743,7 @@ Private Function GetFormRow_Files(ByRef PCCLocal As Variant, PCCPtr As Long, Row
     '
     Dim PageID As Long
     Dim ModifiedDate As Date
-    Dim s As New FastStringClass
+    Dim s As New localFastStringClass
     '
     If (RowCount Mod 2) = 0 Then
         RowClass = "ccPanelRowOdd"
@@ -757,7 +759,7 @@ Private Function GetFormRow_Files(ByRef PCCLocal As Variant, PCCPtr As Long, Row
     PageID = kmaEncodeInteger(PCCLocal(PCC_ID, PCCPtr))
     PageName = kmaEncodeText(PCCLocal(PCC_Name, PCCPtr))
     If AllowFileAuthoring Then
-        EditLink = Main.SiteProperty_AdminURL & "?cid=" & kmaEncodeInteger(PCCLocal(PCC_ContentControlID, PCCPtr)) & "&id=" & PageID & "&af=4" & "&aa=2&depth=1"
+        EditLink = main.SiteProperty_AdminURL & "?cid=" & kmaEncodeInteger(PCCLocal(PCC_ContentControlID, PCCPtr)) & "&id=" & PageID & "&af=4" & "&aa=2&depth=1"
     Else
         EditLink = ""
     End If
@@ -791,14 +793,14 @@ Private Function GetFormRow_Files(ByRef PCCLocal As Variant, PCCPtr As Long, Row
         '
         ' Allow selection of resources to be placed on the opening pages
         '
-        JSCopy = kmaEncodeJavascript(Main.GetPageLink(PageID))
+        JSCopy = kmaEncodeJavascript(main.GetPageLink(PageID))
         ImageLink = "<img src=""/cclib/images/PageLink1616.gif"" border=""0"" width=""16"" height=""16"" alt=""Place a link to this page"" title=""Place a link to this page"" valign=""absmiddle"">"
         s.Add CellStartCenter & "<a href=""#"" onClick=""var e=window.opener.document.getElementById('" & LinkObjectName & "');e.value='" & JSCopy & "'; window.close();"">" & ImageLink & "</A>" & CellEnd
     End If
     '
     ' View
     '
-Copy = Main.GetPageLink(PageID)
+Copy = main.GetPageLink(PageID)
 'Copy = ""
     If Copy = "" Then
         s.Add CellStartCenter & IconNoFile & CellEnd
@@ -984,7 +986,7 @@ ErrorTrap:
 '
 '
 Private Sub HandleClassTrapError(MethodName As String, Optional ignore0 As String)
-    Set Main = Nothing
+    Set main = Nothing
     Call HandleError("SiteExplorer", MethodName, Err.Number, Err.Source, Err.Description, True, False)
     End Sub
 '
@@ -1031,7 +1033,7 @@ Private Function GetParentPagesLink(ByRef PCCLocal As Variant, RootPageName As S
         End If
     Else
 Dim PCCPtr As Long
-        PCCPtr = Main.GetPCCPtr(PageID, False, False)
+        PCCPtr = main.GetPCCPtr(PageID, False, False)
         If PCCPtr >= 0 Then
             RecordFound = True
             ParentID = kmaEncodeInteger(PCCLocal(PCC_ParentID, PCCPtr))
@@ -1080,7 +1082,7 @@ Private Function GetJumpSelect(FolderID As Long, RootPageName As String, ByRef P
     If GetJumpSelect <> "" Then
         GetJumpSelect = Replace(GetJumpSelect, "FieldName", "JumpFolderID")
         GetJumpSelect = Replace(GetJumpSelect, "onChange", "onChange=""QJump(this);"" ")
-        GetJumpSelect = Replace(GetJumpSelect, "value=", "value=?" & Main.RefreshQueryString & "&PageID=")
+        GetJumpSelect = Replace(GetJumpSelect, "value=", "value=?" & main.RefreshQueryString & "&PageID=")
         GetJumpSelect = "<script language=JavaScript1.2>function QJump(e){var l=e.value;if(l!=''){window.name='RL';window.location.assign(l);}}</script>" & GetJumpSelect
     End If
     '
@@ -1126,7 +1128,7 @@ Private Sub Class_Initialize()
 '=================================================================================
 '
 Private Sub Class_Terminate()
-    Set Main = Nothing
+    Set main = Nothing
     End Sub
 '
 '
@@ -1134,12 +1136,12 @@ Private Sub Class_Terminate()
 Private Function GetPageSelect(TopPageID As Long, RootPageName As String, ByRef PCCLocal As Variant) As String
     On Error GoTo ErrorTrap
     '
-    Dim s As New FastStringClass
+    Dim s As New localFastStringClass
     Dim SQL As String
     Dim CS As Long
     Dim Ptr As Long
     Dim PtrPageID As Long
-    Dim Cnt As Long
+    Dim cnt As Long
     Dim BakeName As String
     Dim Pos As Long
     Dim FullPath As String
@@ -1159,9 +1161,9 @@ Private Function GetPageSelect(TopPageID As Long, RootPageName As String, ByRef 
             '
             ' Collect all the Pages
             '
-            PageCnt = Main.PCCCnt
-            ReDim Pages(Main.PCCCnt)
-            For Ptr = 0 To Main.PCCCnt - 1
+            PageCnt = main.PCCCnt
+            ReDim Pages(main.PCCCnt)
+            For Ptr = 0 To main.PCCCnt - 1
                 With Pages(Ptr)
                     .AccessSet = True
                     .FullPath = ""
@@ -1212,7 +1214,7 @@ Private Function GetPageSelect(TopPageID As Long, RootPageName As String, ByRef 
                     End If
                 End If
                 PtrString = PagePathIndex.GetFirstPointer
-                Do While (PtrString <> "")
+                Do While (PtrString <> "-1")
                     Ptr = kmaEncodeInteger(PtrString)
                     PtrPageID = Pages(Ptr).PageID
                     If Pages(Ptr).FullPath = "" Then
@@ -1292,9 +1294,9 @@ Private Function DeleteChildRecords(TableName As String, recordId As Long, Retur
     On Error GoTo ErrorTrap
     '
     If BuildVersion > "3.3.950" Then
-        Call Main.DeleteChildRecords("ccpagecontent", recordId, False)
+        Call main.DeleteChildRecords("ccpagecontent", recordId, False)
     Else
-        Call Main.AddUserError("To automatically delete childs page you need to upgrade Contensive and your database to version 3.3.950.")
+        Call main.AddUserError("To automatically delete childs page you need to upgrade Contensive and your database to version 3.3.950.")
     End If
     
     '
@@ -1308,9 +1310,9 @@ ErrorTrap:
 '
 Private Function GetRecordEditLink(ContentName As String, recordId As Long, AllowCut As Boolean, PageName As String, YesNo As Boolean, BuildVersion As String)
     If BuildVersion > "3.3.950" Then
-        GetRecordEditLink = Main.GetRecordEditLink2(ContentName, recordId, AllowCut, PageName, YesNo)
+        GetRecordEditLink = main.GetRecordEditLink2(ContentName, recordId, AllowCut, PageName, YesNo)
     Else
-        GetRecordEditLink = "<a href=""" & Main.SiteProperty_AdminURL & "?cid=" & Main.GetContentID(ContentName) & "&id=" & recordId & "&af=4""><img src=""/cclib/images/IconContentEdit.gif"" border=0></a>&nbsp;"
+        GetRecordEditLink = "<a href=""" & main.SiteProperty_AdminURL & "?cid=" & main.GetContentID(ContentName) & "&id=" & recordId & "&af=4""><img src=""/cclib/images/IconContentEdit.gif"" border=0></a>&nbsp;"
     End If
 
 End Function
@@ -1319,7 +1321,19 @@ End Function
 '
 Private Function GetRecordAddLink(ContentName As String, NameValueString As String, AllowCut As Boolean, YesNo As Boolean, BuildVersion As String)
     If BuildVersion > "3.3.950" Then
-        GetRecordAddLink = Main.GetRecordAddLink2(ContentName, NameValueString, AllowCut, YesNo)
+        GetRecordAddLink = main.GetRecordAddLink2(ContentName, NameValueString, AllowCut, YesNo)
     End If
 End Function
+'
+'
+'
+Private Function getAdminUI(main As Object) As Object
+        If main.SiteProperty_BuildVersion < "4.2.000" Then
+            Set getAdminUI = CreateObject("ccWeb3.AdminUIClass")
+        Else
+            Set getAdminUI = CreateObject("ccWeb42.AdminUIClass")
+        End If
+End Function
+
+
 

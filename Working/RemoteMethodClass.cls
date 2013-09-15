@@ -66,7 +66,7 @@ Public Function GetContent(OptionString As String) As String
         & "&" & "ShowBlockedSections=1" _
         & "&" & "RemoteMethodName=Site Explorer Remote Method" _
         & ""
-    GetContent = Main.GetAddonContent(0, "NavBase Remote Method", OptionString, ContextRemoteMethod, "", 0, "", InstanceID)
+    GetContent = Main.GetAddonContent(0, "NavBase Remote Method", OptionString, 5, "", 0, "", InstanceID)
     'GetContent = NavBase.GetContent(OptionString)
     Set Main = Nothing
     Exit Function
